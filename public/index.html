@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="DK Hospital matches patients with available doctors and helps schedule appointments quickly and securely.">
+    <title>DK Hospital</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css?v=10">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-shell">
+        <a class="brand" href="#home" aria-label="DK Hospital home">
+          <span class="brand-mark">✚</span>
+          <span class="brand-word">DK <span>HOSPITAL</span></span>
+        </a>
+
+        <nav class="primary-nav" aria-label="Main navigation">
+          <a href="#home">Home</a>
+          <a href="#scheduler">Find a Doctor</a>
+          <a href="#specializations">Specializations</a>
+          <a href="#how-it-works">How It Works</a>
+          <a href="#about">About</a>
+          <a href="#contact">Contact</a>
+        </nav>
+
+        <div class="nav-actions" id="navActions">
+          <button type="button" class="nav-link" id="headerLogin">Patient Login</button>
+          <a class="nav-link" id="doctorLoginLink" href="/doctor-login.html">Doctor Login</a>
+          <a class="button button-secondary header-secondary" href="/patient/dashboard.html" id="headerViewAppointments">View Appointments</a>
+          <a class="button button-primary" href="#scheduler">Book Appointment</a>
+          <button type="button" class="nav-logout hidden" id="headerLogout">Logout</button>
+          <button type="button" class="menu-toggle" aria-label="Toggle navigation" id="menuToggle">☰</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="home">
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Care, intelligently scheduled</p>
+            <h1>Your next appointment starts here.</h1>
+            <p class="lede">Find the right specialist, compare real-time availability, and let our smart scheduler help you secure the best fit in minutes.</p>
+
+            <div class="hero-actions">
+              <a class="button button-primary" href="#scheduler">Find a Doctor <span aria-hidden="true">→</span></a>
+              <a class="button button-secondary" href="#how-it-works">How It Works</a>
+            </div>
+
+            <ul class="hero-trust-list" aria-label="Healthcare trust points">
+              <li>✓ Verified Doctors</li>
+              <li>✓ Real-time Availability</li>
+              <li>✓ Secure Appointments</li>
+            </ul>
+          </div>
+
+          <div class="hero-visual" aria-label="Doctor consultation image">
+            <div class="visual-frame">
+              <img src="/doctor-hero.svg" alt="Doctor consultation illustration for a modern healthcare platform">
+              <div class="floating-card">
+                <span class="badge">Live availability</span>
+                <strong id="heroStatus">Ready when you are</strong>
+                <small>Smart scheduling checks open slots in real time.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-bar" aria-label="Healthcare quick stats">
+        <div class="container stats-grid">
+          <div class="stat-item">
+            <strong>Multiple Doctors</strong>
+            <span>Live specialist coverage</span>
+          </div>
+          <div class="stat-item">
+            <strong>Multiple Specializations</strong>
+            <span>Primary and specialty care</span>
+          </div>
+          <div class="stat-item">
+            <strong>Live Availability</strong>
+            <span>Real-time slot checks</span>
+          </div>
+          <div class="stat-item">
+            <strong>Easy Scheduling</strong>
+            <span>Fast appointment booking</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="scheduler" class="section-shell scheduler">
+        <div class="container">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Smart scheduler</p>
+              <h2>Let us match you.</h2>
+            </div>
+            <p>Pick a specialty and preferred date. Our scheduling logic matches you with the best available doctor and helps secure the next available slot.</p>
+          </div>
+
+          <div class="scheduler-grid">
+            <div class="panel form-panel">
+              <label>
+                <span>Specialization</span>
+                <select id="specialization" aria-label="Choose a specialization"></select>
+              </label>
+
+              <label>
+                <span>Preferred date</span>
+                <input id="date" type="date" aria-label="Preferred date">
+              </label>
+
+              <label class="optional-field">
+                <span>Preferred time</span>
+                <input id="preferredTime" type="time" aria-label="Preferred time">
+              </label>
+
+              <label class="optional-field">
+                <span>Urgency</span>
+                <select id="urgency" aria-label="Urgency level">
+                  <option value="routine">Routine visit</option>
+                  <option value="within-week">Within the week</option>
+                  <option value="urgent">Urgent care</option>
+                </select>
+              </label>
+
+              <button id="schedule" class="button button-primary wide-button" type="button">Schedule My Visit <span aria-hidden="true">→</span></button>
+              <p id="scheduleMessage" class="message" aria-live="polite"></p>
+            </div>
+
+            <div class="panel result-panel">
+              <div class="result-top">
+                <span class="eyebrow">Match result</span>
+                <span id="score" class="score">--</span>
+              </div>
+
+              <div id="matchEmpty" class="match-empty">
+                <div class="empty-illustration" aria-hidden="true">
+                  <span>📅</span>
+                </div>
+                <h3>Your recommended doctor appears here.</h3>
+                <p>Matched based on specialization, availability and scheduling priority.</p>
+              </div>
+
+              <div id="matchDetailsWrap" class="match-details hidden" aria-live="polite">
+                <div class="result-doctor-meta">
+                  <div class="mini-avatar" id="resultAvatar">DS</div>
+                  <div>
+                    <h3 id="doctorName">Dr. Priya Verma</h3>
+                    <p id="matchDetails">Cardiology • 4.9 rating</p>
+                  </div>
+                </div>
+
+                <div class="doctor-info-grid">
+                  <div>
+                    <label>Experience</label>
+                    <strong id="doctorExperience">12 years</strong>
+                  </div>
+                  <div>
+                    <label>Consultation</label>
+                    <strong id="doctorFee">₹900</strong>
+                  </div>
+                  <div>
+                    <label>Available</label>
+                    <strong id="doctorAvailability">Today</strong>
+                  </div>
+                  <div>
+                    <label>Location</label>
+                    <strong id="doctorLocation">DK Hospital</strong>
+                  </div>
+                </div>
+
+                <button id="bookSelected" class="button button-primary wide-button" type="button">Book this doctor</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="how-it-works" class="section-shell how-it-works">
+        <div class="container">
+          <div class="section-heading centered">
+            <div>
+              <p class="eyebrow">How it works</p>
+              <h2>Healthcare scheduling made simple.</h2>
+            </div>
+          </div>
+
+          <div class="steps-grid">
+            <article class="step-card">
+              <span class="step-number">01</span>
+              <div class="step-icon">🩺</div>
+              <h3>Choose a specialization</h3>
+              <p>Select the care you need from our doctor network.</p>
+            </article>
+
+            <article class="step-card">
+              <span class="step-number">02</span>
+              <div class="step-icon">📅</div>
+              <h3>Select your preferred date</h3>
+              <p>Choose a time that works for your schedule.</p>
+            </article>
+
+            <article class="step-card">
+              <span class="step-number">03</span>
+              <div class="step-icon">🤝</div>
+              <h3>Let the scheduler match you</h3>
+              <p>Our system checks availability and priorities in real time.</p>
+            </article>
+
+            <article class="step-card">
+              <span class="step-number">04</span>
+              <div class="step-icon">✅</div>
+              <h3>Confirm your visit</h3>
+              <p>Finalize your appointment and keep your care plan on track.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="specializations" class="section-shell specializations">
+        <div class="container">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Specializations</p>
+              <h2>Care that meets your needs.</h2>
+            </div>
+          </div>
+
+          <div id="specializationsGrid" class="specialties-grid" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section id="doctors" class="section-shell directory">
+        <div class="container">
+          <div class="section-heading doctor-header">
+            <div>
+              <p class="eyebrow">Doctor directory</p>
+              <h2>Doctors who listen.</h2>
+            </div>
+            <div class="directory-controls" aria-label="Doctor filters">
+              <input id="doctorSearch" type="search" placeholder="Search doctor or specialty" aria-label="Search doctor">
+              <select id="specialityFilter" aria-label="Filter by specialization">
+                <option value="all">All specializations</option>
+              </select>
+              <select id="doctorSort" aria-label="Sort doctors">
+                <option value="rating">Sort by rating</option>
+                <option value="experience">Sort by experience</option>
+                <option value="fee">Sort by consultation fee</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="doctorList" class="doctor-list" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section id="about" class="section-shell feature-trust">
+        <div class="container">
+          <div class="section-heading centered">
+            <div>
+              <p class="eyebrow">Why patients choose DK Hospital</p>
+              <h2>Healthcare scheduling designed around you.</h2>
+            </div>
+          </div>
+
+          <div class="feature-grid">
+            <article class="feature-card">
+              <div class="feature-icon">⏱️</div>
+              <h3>Real-Time Availability</h3>
+              <p>Check open consultation slots before confirming a visit.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon">🧠</div>
+              <h3>Smart Matching</h3>
+              <p>Find doctors based on specialization, availability and scheduling priority.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon">🔒</div>
+              <h3>Secure Patient Access</h3>
+              <p>Keep appointment information accessible and protected from your patient account.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-shell cta-banner">
+        <div class="container cta-wrap">
+          <div>
+            <p class="eyebrow">Need care fast?</p>
+            <h2>Start with the right specialist.</h2>
+          </div>
+          <a class="button button-primary" href="#scheduler">Book an Appointment</a>
+        </div>
+      </section>
+    </main>
+
+    <footer id="contact" class="site-footer">
+      <div class="container footer-grid">
+        <div>
+          <a class="brand footer-brand" href="#home">
+            <span class="brand-mark">✚</span>
+            <span class="brand-word">DK <span>HOSPITAL</span></span>
+          </a>
+          <p>Smart healthcare scheduling for better patient access.</p>
+        </div>
+
+        <div>
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#scheduler">Find a Doctor</a></li>
+            <li><a href="#specializations">Specializations</a></li>
+            <li><a href="/patient/dashboard.html">Appointments</a></li>
+            <li><a href="#about">About</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3>Contact</h3>
+          <ul>
+            <li>DK Hospital</li>
+            <li>Phone: Available within the app</li>
+            <li>Email: Available within the app</li>
+          </ul>
+        </div>
+      </div>
+      <div class="container footer-bottom">
+        <span>© 2026 DK Hospital</span>
+      </div>
+    </footer>
+
+    <div id="doctorModal" class="modal hidden" aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="modal-backdrop" data-close-modal="true"></div>
+      <div class="modal-panel panel" tabindex="-1">
+        <button type="button" class="modal-close" aria-label="Close profile" data-close-modal="true">×</button>
+        <div class="modal-content" id="modalContent"></div>
+      </div>
+    </div>
+
+    <script src="/app.js?v=10"></script>
+  </body>
+</html>

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Patient Access | DK Hospital</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css?v=6">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-shell">
+        <a class="brand" href="/" aria-label="DK Hospital home">
+          <span class="brand-mark">✚</span>
+          <span class="brand-word">DK <span>HOSPITAL</span></span>
+        </a>
+
+        <nav class="primary-nav" aria-label="Main navigation">
+          <a href="/">Home</a>
+          <a href="/#scheduler">Find a Doctor</a>
+          <a href="/#specializations">Specializations</a>
+          <a href="/#how-it-works">How It Works</a>
+          <a href="/#about">About</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a class="button button-primary" href="/#scheduler">Book Appointment</a>
+          <a class="button button-secondary" href="/patient/dashboard.html">View Appointments</a>
+          <a class="nav-link" href="/doctor-login.html">Doctor Login</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container auth-page-shell">
+      <section class="auth-page panel">
+        <div class="auth-page-copy">
+          <p class="eyebrow">Patient access</p>
+          <h1 id="authTitle">Welcome back</h1>
+          <p>Access your appointments, review care plans, and keep your scheduling journey organized in one secure place.</p>
+        </div>
+
+        <form id="authForm" class="auth-form" autocomplete="on">
+          <select id="accountType" class="register-only hidden" aria-label="Register as">
+            <option value="patient">Patient</option>
+            <option value="doctor">Doctor</option>
+          </select>
+          <input id="fullName" placeholder="Full name" class="register-only hidden" aria-label="Full name">
+          <input id="email" type="email" placeholder="Email address" aria-label="Email address" required>
+          <input id="password" type="password" placeholder="Password" aria-label="Password" required>
+          <input id="dob" type="date" class="register-only hidden" aria-label="Date of birth">
+          <input id="phone" placeholder="Phone number" class="register-only hidden" aria-label="Phone number">
+          <select id="doctorSpecialization" class="doctor-only register-only hidden" aria-label="Doctor specialization">
+            <option value="">Select specialization</option>
+            <option value="1">Cardiology</option>
+            <option value="2">Dermatology</option>
+            <option value="3">General Medicine</option>
+            <option value="4">Orthopedics</option>
+            <option value="5">Pediatrics</option>
+            <option value="6">Neurology</option>
+            <option value="7">Oncology</option>
+            <option value="8">Gastroenterology</option>
+            <option value="9">Endocrinology</option>
+            <option value="10">Psychiatry</option>
+            <option value="11">Ophthalmology</option>
+            <option value="12">Otolaryngology</option>
+            <option value="13">Urology</option>
+            <option value="14">Gynecology</option>
+            <option value="15">Pulmonology</option>
+            <option value="16">Nephrology</option>
+            <option value="17">Emergency Medicine</option>
+          </select>
+          <input id="licenseNo" placeholder="License number" class="doctor-only register-only hidden" aria-label="License number">
+          <input id="yearsExperience" type="number" min="0" placeholder="Years experience" class="doctor-only register-only hidden" aria-label="Years of experience">
+          <input id="consultationFee" type="number" min="0" placeholder="Consultation fee" class="doctor-only register-only hidden" aria-label="Consultation fee">
+
+          <div class="form-actions auth-actions">
+            <button class="button button-primary" type="submit">Continue</button>
+            <button type="button" id="toggleAuth" class="text-button">Create an account</button>
+            <a class="text-button" href="/doctor-login.html">Doctor login</a>
+          </div>
+          <p id="authMessage" class="message" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <script src="/app.js?v=6"></script>
+  </body>
+</html>
