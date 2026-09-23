@@ -1,0 +1,29 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: clinic_scheduler
+      MYSQL_USER: clinic
+      MYSQL_PASSWORD: clinic_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+  app:
+    build: .
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      JWT_SECRET: change-this-in-production
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: clinic
+      DB_PASSWORD: clinic_password
+      DB_NAME: clinic_scheduler
+volumes:
+  mysql_data:
