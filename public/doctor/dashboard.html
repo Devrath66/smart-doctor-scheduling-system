@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Doctor Workspace | DK Hospital</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css?v=8">
+  </head>
+  <body class="authenticated">
+    <header class="site-header">
+      <div class="container nav-shell">
+        <a class="brand" href="/" aria-label="DK Hospital home">
+          <span class="brand-mark">✚</span>
+          <span class="brand-word">DK <span>HOSPITAL</span></span>
+        </a>
+        <nav class="primary-nav" aria-label="Main navigation">
+          <a href="/doctor/dashboard.html" aria-current="page">My Workspace</a>
+          <a href="/doctor/availability.html">Availability</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="nav-logout" id="headerLogout">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container portal-page">
+      <section class="portal-hero doctor-hero">
+        <p class="eyebrow">Doctor workspace</p>
+        <div class="portal-hero-row">
+          <div>
+            <h1 id="doctorGreeting">Your patient queue</h1>
+            <p class="portal-subtitle">A focused view of your upcoming consultations and completed visits.</p>
+          </div>
+          <span class="portal-pill">Private clinical view</span>
+        </div>
+      </section>
+
+      <section id="doctorStats" class="doctor-stats" aria-label="Appointment summary"></section>
+
+      <section class="doctor-section">
+        <div class="section-heading doctor-section-heading">
+          <div>
+            <p class="eyebrow">Next up</p>
+            <h2>Appointment queue</h2>
+          </div>
+          <button type="button" class="button button-secondary" id="refreshQueue">Refresh queue</button>
+        </div>
+        <div id="queue" class="doctor-queue"></div>
+      </section>
+
+      <section class="doctor-section attended-section">
+        <div class="doctor-section-heading">
+          <div>
+            <p class="eyebrow">Your care history</p>
+            <h2>Patients you have attended</h2>
+          </div>
+        </div>
+        <div id="attended" class="attended-list"></div>
+      </section>
+    </main>
+
+    <script src="/doctor/doctor.js?v=2"></script>
+  </body>
+</html>

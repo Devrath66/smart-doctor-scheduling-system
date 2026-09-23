@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DK Hospital Admin</title><link rel="stylesheet" href="/styles.css?v=3"></head>
+<body class="authenticated">
+<header><a class="brand" href="/">DK <span>HOSPITAL</span></a><nav><a href="/">Patient site</a><button id="signOut" class="ghost">Sign out</button></nav></header>
+<main class="directory admin-page">
+  <p class="eyebrow">Administration</p><h1>Roster control room</h1><p class="lede">Manage the clinical directory, consultation fees, capacity, and live weekly availability from one place.</p>
+  <section id="stats" class="doctor-list"><article class="doctor"><span class="specialty">Loading</span><h3>System overview</h3><p>Fetching current activity...</p></article></section>
+  <section class="panel admin-tools"><div class="section-heading"><div><p class="eyebrow">Clinical roster</p><h2>Doctors</h2></div><p>Update a doctor’s profile or add a new availability window.</p></div><div id="roster" class="doctor-list"></div></section>
+  <p id="message" class="message"></p>
+</main>
+<script src="/admin/admin.js?v=3"></script>
+</body></html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Availability | DK Hospital</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css?v=8">
+  </head>
+  <body class="authenticated">
+    <header class="site-header">
+      <div class="container nav-shell">
+        <a class="brand" href="/" aria-label="DK Hospital home">
+          <span class="brand-mark">+</span>
+          <span class="brand-word">DK <span>HOSPITAL</span></span>
+        </a>
+        <nav class="primary-nav" aria-label="Doctor navigation">
+          <a href="/doctor/dashboard.html">My Workspace</a>
+          <a href="/doctor/availability.html" aria-current="page">Availability</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="nav-logout" id="headerLogout">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container portal-page">
+      <section class="portal-hero doctor-hero">
+        <p class="eyebrow">Doctor workspace</p>
+        <div class="portal-hero-row">
+          <div>
+            <h1>Set your weekly hours</h1>
+            <p class="portal-subtitle">Keep your appointment slots accurate so patients can book times you are available.</p>
+          </div>
+          <span class="portal-pill">Schedule settings</span>
+        </div>
+      </section>
+
+      <section class="availability-layout">
+        <div class="schedule-panel">
+          <div class="doctor-section-heading">
+            <div>
+              <p class="eyebrow">Add a window</p>
+              <h2>New availability</h2>
+            </div>
+          </div>
+          <form id="availabilityForm" class="availability-form">
+            <label>Day<select id="dayOfWeek" required><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></label>
+            <div class="availability-time-row">
+              <label>Starts<input id="startTime" type="time" value="09:00" required></label>
+              <label>Ends<input id="endTime" type="time" value="17:00" required></label>
+            </div>
+            <label>Slot length<select id="slotDurationMin"><option value="15">15 minutes</option><option value="30" selected>30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option></select></label>
+            <button class="button button-primary" type="submit">Add availability</button>
+            <p id="availabilityMessage" class="message" aria-live="polite"></p>
+          </form>
+        </div>
+
+        <div class="schedule-panel">
+          <div class="doctor-section-heading">
+            <div>
+              <p class="eyebrow">Published schedule</p>
+              <h2>Your weekly windows</h2>
+            </div>
+          </div>
+          <div id="availabilityList" class="availability-list"></div>
+        </div>
+      </section>
+    </main>
+    <script src="/doctor/availability.js?v=2"></script>
+  </body>
+</html>

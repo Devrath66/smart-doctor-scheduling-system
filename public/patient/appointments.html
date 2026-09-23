@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Appointments | DK Hospital</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css?v=9">
+  </head>
+  <body class="authenticated">
+    <header class="site-header">
+      <div class="container nav-shell">
+        <a class="brand" href="/" aria-label="DK Hospital home">
+          <span class="brand-mark">+</span>
+          <span class="brand-word">DK <span>HOSPITAL</span></span>
+        </a>
+        <nav class="primary-nav" aria-label="Patient navigation">
+          <a href="/">Home</a>
+          <a href="/patient/search.html">Find a Doctor</a>
+          <a href="/patient/appointments.html" aria-current="page">Appointments</a>
+          <a href="/#scheduler">Smart Scheduler</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="nav-logout" id="headerLogout">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container portal-page">
+      <section class="portal-hero">
+        <p class="eyebrow">Patient portal</p>
+        <div class="portal-hero-row">
+          <div>
+            <h1>Your appointments</h1>
+            <p class="portal-subtitle">Keep upcoming visits close and review your previous care in one place.</p>
+          </div>
+          <span class="portal-pill">Care timeline</span>
+        </div>
+      </section>
+      <div id="output"></div>
+    </main>
+    <script src="/portal.js?v=9"></script>
+  </body>
+</html>

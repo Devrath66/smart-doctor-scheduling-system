@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Patient Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css?v=7">
+  </head>
+  <body class="authenticated">
+    <header class="site-header">
+      <div class="container nav-shell">
+        <a class="brand" href="/" aria-label="DK Hospital home">
+          <span class="brand-mark">✚</span>
+          <span class="brand-word">DK <span>HOSPITAL</span></span>
+        </a>
+        <nav class="primary-nav" aria-label="Main navigation">
+          <a href="/">Home</a>
+          <a href="/patient/search.html">Find a Doctor</a>
+          <a href="/patient/appointments.html">Appointments</a>
+          <a href="/#scheduler">Smart Scheduler</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="nav-logout" id="headerLogout">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container portal-page">
+      <section class="portal-hero">
+        <p class="eyebrow">Patient portal</p>
+        <div class="portal-hero-row">
+          <h1>Upcoming care</h1>
+          <span class="portal-pill">Secure access</span>
+        </div>
+      </section>
+
+      <section id="output" class="portal-grid"></section>
+    </main>
+
+    <script src="/portal.js?v=7"></script>
+  </body>
+</html>
