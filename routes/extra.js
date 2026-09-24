@@ -13,6 +13,10 @@ module.exports = function registerExtraRoutes(app, pool, authenticate) {
       res.status(201).json({ token: jwt.sign({ userId: user.insertId, role: 'patient' }, process.env.JWT_SECRET || 'development-secret', { expiresIn: '8h' }), role: 'patient' });
     } catch (error) { res.status(error.code === 'ER_DUP_ENTRY' ? 409 : 400).json({ error: error.code === 'ER_DUP_ENTRY' ? 'EMAIL_EXISTS' : 'REGISTRATION_FAILED' }); }
   });
+  app.get('/api/patients', authenticate, authorize('admin'), async (req, res) => {
+    const [rows] = await pool.execute('SELECT p.patient_id,p.user_id,u.full_name,u.email,p.date_of_birth,p.phone,p.gender,p.address FROM Patients p JOIN Users u ON u.user_id=p.user_id ORDER BY u.full_name');
+    res.json(rows);
+  });
   app.get('/api/patients/:id', authenticate, authorize('patient', 'admin'), async (req, res) => {
     const [rows] = await pool.execute('SELECT p.*,u.full_name,u.email FROM Patients p JOIN Users u ON u.user_id=p.user_id WHERE p.patient_id=?', [req.params.id]);
     if (!rows.length || (req.user.role === 'patient' && rows[0].user_id !== req.user.userId)) return res.status(404).json({ error: 'PATIENT_NOT_FOUND' });

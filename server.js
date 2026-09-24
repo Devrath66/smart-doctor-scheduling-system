@@ -102,6 +102,16 @@ async function ensureSchemaCompatibility() {
     console.log('Added Appointments.is_emergency column.');
   }
   await pool.execute("UPDATE Users SET email=CONCAT(LOWER(REPLACE(REPLACE(full_name,'Dr. ',''),' ','.')),'@dkhospital.com') WHERE role='doctor'");
+
+  const adminEmail = 'admin@northstar.test';
+  const adminHash = await bcrypt.hash('Admin@123', 10);
+  const [adminRows] = await pool.execute('SELECT user_id FROM Users WHERE email=? AND role=?', [adminEmail, 'admin']);
+  if (adminRows.length) {
+    await pool.execute('UPDATE Users SET password_hash=?, full_name=? WHERE email=? AND role=?', [adminHash, 'Clinic Administrator', adminEmail, 'admin']);
+  } else {
+    await pool.execute("INSERT INTO Users(full_name,email,password_hash,role) VALUES(?,?,?,'admin')", ['Clinic Administrator', adminEmail, adminHash]);
+  }
+  console.log('Admin credentials ready.');
 }
 if (require.main === module) {
   ensureSchemaCompatibility()
