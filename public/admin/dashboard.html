@@ -1,13 +1,111 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DK Hospital Admin</title><link rel="stylesheet" href="/styles.css?v=3"></head>
-<body class="authenticated">
-<header><a class="brand" href="/">DK <span>HOSPITAL</span></a><nav><a href="/">Patient site</a><button id="signOut" class="ghost">Sign out</button></nav></header>
-<main class="directory admin-page">
-  <p class="eyebrow">Administration</p><h1>Roster control room</h1><p class="lede">Manage the clinical directory, consultation fees, capacity, and live weekly availability from one place.</p>
-  <section id="stats" class="doctor-list"><article class="doctor"><span class="specialty">Loading</span><h3>System overview</h3><p>Fetching current activity...</p></article></section>
-  <section class="panel admin-tools"><div class="section-heading"><div><p class="eyebrow">Clinical roster</p><h2>Doctors</h2></div><p>Update a doctor’s profile or add a new availability window.</p></div><div id="roster" class="doctor-list"></div></section>
-  <p id="message" class="message"></p>
-</main>
-<script src="/admin/admin.js?v=3"></script>
-</body></html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>DK Hospital Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css?v=12">
+  </head>
+  <body class="admin-body authenticated">
+    <header class="site-header admin-header">
+      <div class="container nav-shell">
+        <a class="brand" href="/" aria-label="DK Hospital home">
+          <span class="brand-mark">✚</span>
+          <span class="brand-word">DK <span>HOSPITAL</span></span>
+        </a>
+
+        <nav class="primary-nav" aria-label="Admin navigation">
+          <a href="/">Patient site</a>
+          <a href="#overview">Overview</a>
+          <a href="#doctors">Doctors</a>
+          <a href="#patients">Patients</a>
+          <a href="#appointments">Appointments</a>
+        </nav>
+
+        <div class="nav-actions">
+          <button id="signOut" class="button button-secondary" type="button">Sign out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container admin-page">
+      <section class="admin-hero" id="overview">
+        <p class="eyebrow">Administration</p>
+        <h1>Roster control room</h1>
+        <p class="lede">Manage clinic operations, edit doctor profiles, oversee patient activity, and keep appointments running smoothly from one place.</p>
+      </section>
+
+      <section class="admin-section">
+        <div id="stats" class="admin-stats"></div>
+      </section>
+
+      <section id="doctors" class="panel admin-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Clinical roster</p>
+            <h2>Doctors</h2>
+          </div>
+          <p>Update doctor profiles and add availability windows for each clinician.</p>
+        </div>
+        <div id="roster" class="admin-doctor-grid"></div>
+      </section>
+
+      <section id="patients" class="panel admin-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Patient directory</p>
+            <h2>Patients</h2>
+          </div>
+          <p>Review active patient records and contact information from the hospital directory.</p>
+        </div>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>DOB</th>
+                <th>Phone</th>
+                <th>Address</th>
+              </tr>
+            </thead>
+            <tbody id="patientsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="appointments" class="panel admin-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Scheduling</p>
+            <h2>Appointments</h2>
+          </div>
+          <p>Monitor today's schedule and update appointment status as care is delivered.</p>
+        </div>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="appointmentsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <p id="message" class="message" aria-live="polite"></p>
+    </main>
+
+    <script src="/admin/admin.js?v=6"></script>
+  </body>
+</html>
