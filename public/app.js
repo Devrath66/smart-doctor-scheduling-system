@@ -1,4 +1,5 @@
 const state = { token: localStorage.getItem('clinicToken'), register: false, registerRole: 'patient', doctors: [], specializations: [], selectedDoctorId: null };
+const adminLoginMode = new URLSearchParams(window.location.search).get('role') === 'admin';
 const $ = (id) => document.getElementById(id);
 
 function syncRegisterFields() {
@@ -202,10 +203,15 @@ async function showSignedIn() {
   const headerLogin = $('headerLogin');
   const headerLogout = $('headerLogout');
   const headerViewAppointments = $('headerViewAppointments');
+  const adminLoginLink = $('adminLoginLink');
 
   if (headerLogin) {
     headerLogin.style.display = 'none';
     headerLogin.classList.add('hidden');
+  }
+  if (adminLoginLink) {
+    adminLoginLink.style.display = 'none';
+    adminLoginLink.classList.add('hidden');
   }
   if (headerViewAppointments) headerViewAppointments.style.display = 'inline-flex';
   if (headerLogout) {
@@ -310,6 +316,11 @@ function bindEvents() {
     headerLogin.onclick = () => {
       window.location.href = '/login.html';
     };
+  }
+
+  const adminLoginLink = $('adminLoginLink');
+  if (adminLoginLink) {
+    adminLoginLink.style.display = 'inline-flex';
   }
 
   const authForm = $('authForm');
@@ -493,6 +504,16 @@ function init() {
   const savedRole = localStorage.getItem('clinicRole');
   if (state.token && location.pathname === '/' && savedRole === 'admin') location.replace('/admin/dashboard.html');
   if (state.token && location.pathname === '/' && savedRole === 'doctor') location.replace('/doctor/dashboard.html');
+
+  if (location.pathname === '/login.html' && adminLoginMode) {
+    const title = $('authTitle');
+    if (title) title.textContent = 'Administrator access';
+    const toggleAuth = $('toggleAuth');
+    if (toggleAuth) toggleAuth.classList.add('hidden');
+    const authCopy = document.querySelector('.auth-page-copy p:last-of-type');
+    if (authCopy) authCopy.textContent = 'Use your administrator login to review doctors, appointments, and patient records.';
+    document.title = 'Admin Access | DK Hospital';
+  }
 
   setDate();
   bindEvents();

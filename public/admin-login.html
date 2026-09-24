@@ -3,43 +3,47 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Doctor Login | DK Hospital</title>
+    <title>Admin Login | DK Hospital</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/styles.css?v=8">
+    <link rel="stylesheet" href="/styles.css?v=11">
   </head>
   <body>
     <header class="site-header">
       <div class="container nav-shell">
         <a class="brand" href="/" aria-label="DK Hospital home">
-          <span class="brand-mark">+</span>
+          <span class="brand-mark">✚</span>
           <span class="brand-word">DK <span>HOSPITAL</span></span>
         </a>
+
         <div class="nav-actions">
           <a class="button button-secondary" href="/login.html">Patient login</a>
-          <a class="nav-link" href="/admin-login.html">Admin login</a>
+          <a class="nav-link" href="/doctor-login.html">Doctor login</a>
         </div>
       </div>
     </header>
+
     <main class="container auth-page-shell">
       <section class="auth-page panel">
         <div class="auth-page-copy">
-          <p class="eyebrow">Clinical team access</p>
-          <h1>Welcome, doctor.</h1>
-          <p>Sign in to manage your private appointment queue, flag emergency patients, and review the people you have attended.</p>
+          <p class="eyebrow">Administrator access</p>
+          <h1>Welcome, admin.</h1>
+          <p>Review patient data, manage doctors, monitor appointments, and oversee the hospital schedule from one secure control room.</p>
         </div>
+
         <form id="authForm" class="auth-form" autocomplete="on">
-          <input id="email" type="email" placeholder="Work email address" aria-label="Work email address" required>
+          <input id="email" type="email" placeholder="Admin email" aria-label="Admin email" required>
           <input id="password" type="password" placeholder="Password" aria-label="Password" required>
           <div class="form-actions auth-actions">
-            <button class="button button-primary" type="submit">Open doctor workspace</button>
-            <a class="text-button" href="/login.html">I am a patient</a>
+            <button class="button button-primary" type="submit">Open admin dashboard</button>
+            <a class="text-button" href="/login.html">Back to patient login</a>
           </div>
           <p id="authMessage" class="message" aria-live="polite"></p>
         </form>
       </section>
     </main>
-    <script src="/app.js?v=8"></script>
+
+    <script src="/app.js?v=11"></script>
   </body>
 </html>
