@@ -1,5 +1,8 @@
 const token = localStorage.getItem('clinicToken');
 const message = document.querySelector('#message');
+const addDoctorForm = document.querySelector('#addDoctorForm');
+const doctorFormMessage = document.querySelector('#doctorFormMessage');
+const toggleAddDoctor = document.querySelector('#toggleAddDoctor');
 const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 const api = async (path, options = {}) => {
   const response = await fetch(`/api${path}`, {
@@ -224,6 +227,12 @@ async function load() {
 
     renderStats(statsData);
     renderDoctors(doctors, specializations);
+    const specializationSelect = addDoctorForm.elements.specializationId;
+    const selectedSpecialization = specializationSelect.value;
+    specializationSelect.innerHTML = '<option value="">Select a specialization</option>' + specializations.map((item) =>
+      `<option value="${item.specialization_id}">${escapeHtml(item.name)}</option>`
+    ).join('');
+    specializationSelect.value = selectedSpecialization;
     renderPatients(patients);
     renderAppointments(appointments);
   } catch (error) {
@@ -231,10 +240,61 @@ async function load() {
   }
 }
 
+toggleAddDoctor.addEventListener('click', () => {
+  addDoctorForm.hidden = !addDoctorForm.hidden;
+  toggleAddDoctor.setAttribute('aria-expanded', String(!addDoctorForm.hidden));
+  doctorFormMessage.textContent = '';
+  if (!addDoctorForm.hidden) addDoctorForm.elements.fullName.focus();
+});
+
+document.querySelector('#cancelAddDoctor').addEventListener('click', () => {
+  addDoctorForm.reset();
+  addDoctorForm.hidden = true;
+  toggleAddDoctor.setAttribute('aria-expanded', 'false');
+  doctorFormMessage.textContent = '';
+  toggleAddDoctor.focus();
+});
+
+addDoctorForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const submitButton = addDoctorForm.querySelector('[type="submit"]');
+  const formData = new FormData(addDoctorForm);
+  submitButton.disabled = true;
+  doctorFormMessage.textContent = '';
+
+  try {
+    await api('/admin/doctors', {
+      method: 'POST',
+      body: JSON.stringify({
+        fullName: formData.get('fullName'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        licenseNo: formData.get('licenseNo'),
+        specializationId: Number(formData.get('specializationId')),
+        yearsExperience: Number(formData.get('yearsExperience')),
+        consultationFee: Number(formData.get('consultationFee')),
+        dailyCapacity: Number(formData.get('dailyCapacity'))
+      })
+    });
+    addDoctorForm.reset();
+    doctorFormMessage.textContent = 'Doctor account created successfully.';
+    await load();
+  } catch (error) {
+    doctorFormMessage.textContent = error.message === 'EMAIL_OR_LICENSE_EXISTS'
+      ? 'That email or license number is already registered.'
+      : error.message === 'INVALID_INPUT' || error.message === 'INVALID_SPECIALIZATION'
+        ? 'Check the doctor details and select a valid specialization.'
+        : error.message === 'DOCTOR_CREATION_FAILED'
+          ? 'Unable to create the doctor account. Please try again.'
+          : error.message;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
 document.querySelector('#signOut').onclick = () => {
   localStorage.clear();
   location.href = '/';
 };
 
 load();
-

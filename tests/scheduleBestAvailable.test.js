@@ -39,6 +39,31 @@ test('returns doctor details needed by the UI when a candidate is booked', async
   expect(result.specialization).toBe('Cardiology');
 });
 
+test('previews the top-ranked appointment without booking it', async () => {
+  bookAppointment.mockClear();
+  const doctors = [
+    { doctor_id: 11, full_name: 'Top Doctor', specialization: 'Cardiology', years_experience: 12, avg_rating: 5, daily_capacity: 8, consultation_fee: 900 }
+  ];
+  generateAvailableSlots.mockResolvedValue([{ startTime: '09:00:00', endTime: '09:30:00', availabilityId: 77 }]);
+
+  const result = await scheduleBestAvailable(poolFor(doctors), {
+    specializationId: 1,
+    preferredDate: '2030-01-07',
+    previewOnly: true
+  });
+
+  expect(result).toMatchObject({
+    doctorId: 11,
+    availabilityId: 77,
+    availableSlots: [{ startTime: '09:00:00', endTime: '09:30:00', availabilityId: 77 }],
+    appointmentDate: '2030-01-07',
+    startTime: '09:00:00',
+    endTime: '09:30:00',
+    consultationFee: 900
+  });
+  expect(bookAppointment).not.toHaveBeenCalled();
+});
+
 test('returns NO_AVAILABLE_DOCTOR when every candidate has no slots', async () => {
   generateAvailableSlots.mockResolvedValue([]);
   await expect(scheduleBestAvailable(poolFor([{ doctor_id: 11 }]), { patientId: 3, specializationId: 1, preferredDate: '2030-01-07' })).rejects.toMatchObject({ code: 'NO_AVAILABLE_DOCTOR' });

@@ -2,7 +2,7 @@ const { generateAvailableSlots } = require('./generateSlots');
 const { computeDoctorScore } = require('./rankDoctors');
 const { bookAppointment } = require('./bookAppointment');
 
-async function scheduleBestAvailable(pool, { patientId, specializationId, preferredDate }) {
+async function scheduleBestAvailable(pool, { patientId, specializationId, preferredDate, previewOnly = false }) {
   const connection = await pool.getConnection();
   try {
     const [doctors] = await connection.execute(
@@ -31,6 +31,24 @@ async function scheduleBestAvailable(pool, { patientId, specializationId, prefer
         dailyCapacity: candidate.doctor.daily_capacity
       })
     })).sort((a, b) => b.score - a.score);
+    if (previewOnly) {
+      const candidate = ranked[0];
+      const slot = candidate.slots[0];
+      return {
+        doctorId: candidate.doctor.doctor_id,
+        availabilityId: slot.availabilityId,
+        availableSlots: candidate.slots,
+        appointmentDate: preferredDate,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        doctorName: candidate.doctor.full_name,
+        specialization: candidate.doctor.specialization,
+        yearsExperience: candidate.doctor.years_experience,
+        consultationFee: candidate.doctor.consultation_fee,
+        avgRating: candidate.doctor.avg_rating,
+        score: candidate.score
+      };
+    }
     for (const candidate of ranked) {
       const slot = candidate.slots[0];
       try {

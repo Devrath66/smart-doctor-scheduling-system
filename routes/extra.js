@@ -17,6 +17,75 @@ module.exports = function registerExtraRoutes(app, pool, authenticate) {
     const [rows] = await pool.execute('SELECT p.patient_id,p.user_id,u.full_name,u.email,p.date_of_birth,p.phone,p.gender,p.address FROM Patients p JOIN Users u ON u.user_id=p.user_id ORDER BY u.full_name');
     res.json(rows);
   });
+  app.post('/api/admin/doctors', authenticate, authorize('admin'), async (req, res) => {
+    const {
+      fullName,
+      email,
+      password,
+      licenseNo,
+      specializationId,
+      yearsExperience,
+      consultationFee,
+      dailyCapacity
+    } = req.body || {};
+    const normalizedName = typeof fullName === 'string' ? fullName.trim() : '';
+    const normalizedEmail = typeof email === 'string' ? email.trim() : '';
+    const normalizedLicense = typeof licenseNo === 'string' ? licenseNo.trim() : '';
+    const specialization = Number(specializationId);
+    const experience = Number(yearsExperience);
+    const fee = Number(consultationFee);
+    const capacity = Number(dailyCapacity);
+
+    if (
+      !normalizedName ||
+      normalizedName.length > 100 ||
+      !normalizedEmail ||
+      normalizedEmail.length > 150 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) ||
+      typeof password !== 'string' ||
+      !password ||
+      !normalizedLicense ||
+      normalizedLicense.length > 50 ||
+      !Number.isInteger(specialization) ||
+      specialization < 1 ||
+      !Number.isInteger(experience) ||
+      experience < 0 ||
+      !Number.isFinite(fee) ||
+      fee < 0 ||
+      !Number.isInteger(capacity) ||
+      capacity < 1
+    ) {
+      return res.status(400).json({ error: 'INVALID_INPUT' });
+    }
+
+    let connection;
+    try {
+      const passwordHash = await bcrypt.hash(password, 10);
+      connection = await pool.getConnection();
+      await connection.beginTransaction();
+      const [user] = await connection.execute(
+        "INSERT INTO Users(full_name,email,password_hash,role) VALUES(?,?,?,'doctor')",
+        [normalizedName, normalizedEmail, passwordHash]
+      );
+      const [doctor] = await connection.execute(
+        'INSERT INTO Doctors(user_id,specialization_id,license_no,years_experience,consultation_fee,avg_rating,daily_capacity) VALUES(?,?,?,?,?,5.00,?)',
+        [user.insertId, specialization, normalizedLicense, experience, fee, capacity]
+      );
+      await connection.commit();
+      res.status(201).json({ doctorId: doctor.insertId });
+    } catch (error) {
+      if (connection) await connection.rollback();
+      if (error.code === 'ER_DUP_ENTRY') {
+        return res.status(409).json({ error: 'EMAIL_OR_LICENSE_EXISTS' });
+      }
+      if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+        return res.status(400).json({ error: 'INVALID_SPECIALIZATION' });
+      }
+      return res.status(500).json({ error: 'DOCTOR_CREATION_FAILED' });
+    } finally {
+      if (connection) connection.release();
+    }
+  });
   app.get('/api/patients/:id', authenticate, authorize('patient', 'admin'), async (req, res) => {
     const [rows] = await pool.execute('SELECT p.*,u.full_name,u.email FROM Patients p JOIN Users u ON u.user_id=p.user_id WHERE p.patient_id=?', [req.params.id]);
     if (!rows.length || (req.user.role === 'patient' && rows[0].user_id !== req.user.userId)) return res.status(404).json({ error: 'PATIENT_NOT_FOUND' });

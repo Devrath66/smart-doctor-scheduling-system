@@ -46,26 +46,6 @@ app.post('/api/auth/register', authLimit, async (req, res) => {
     } finally { connection.release(); }
   } catch (error) { res.status(error.code === 'ER_DUP_ENTRY' ? 409 : 400).json({ error: error.code === 'ER_DUP_ENTRY' ? 'EMAIL_EXISTS' : 'REGISTRATION_FAILED' }); }
 });
-app.post('/api/auth/register-doctor', authLimit, async (req, res) => {
-  try {
-    const { fullName, email, password, phone, specializationId, licenseNo, yearsExperience, consultationFee } = req.body;
-    if (!fullName || !email || !password || !phone || !specializationId || !licenseNo) {
-      return res.status(400).json({ error: 'INVALID_INPUT' });
-    }
-    const hash = await bcrypt.hash(password, 10);
-    const connection = await pool.getConnection();
-    try {
-      await connection.beginTransaction();
-      const [user] = await connection.execute("INSERT INTO Users(full_name,email,password_hash,role) VALUES(?,?,?,'doctor')", [fullName, email, hash]);
-      await connection.execute('INSERT INTO Doctors(user_id,specialization_id,license_no,years_experience,consultation_fee,avg_rating,daily_capacity) VALUES(?,?,?,?,?,5.00,8)', [user.insertId, specializationId, licenseNo, yearsExperience || 0, consultationFee || 700]);
-      await connection.commit();
-      res.status(201).json({ token: tokenFor({ user_id: user.insertId, role: 'doctor' }), role: 'doctor' });
-    } finally { connection.release(); }
-  } catch (error) {
-    const message = error.code === 'ER_DUP_ENTRY' ? 'EMAIL_EXISTS' : 'DOCTOR_REGISTRATION_FAILED';
-    res.status(error.code === 'ER_DUP_ENTRY' ? 409 : 400).json({ error: message });
-  }
-});
 app.post('/api/auth/login', authLimit, async (req, res) => {
   try {
     const [users] = await pool.execute('SELECT * FROM Users WHERE email=?', [req.body.email]);
@@ -80,6 +60,19 @@ app.get('/api/doctors', async (req, res) => {
   res.json(rows);
 });
 app.get('/api/availability/:doctorId/:date', async (req, res) => { const connection = await pool.getConnection(); try { res.json(await generateAvailableSlots(connection, req.params.doctorId, req.params.date)); } finally { connection.release(); } });
+app.post('/api/smart-schedule/preview', authenticate, authorize('patient'), async (req, res) => {
+  const { specializationId, preferredDate } = req.body || {};
+  if (!specializationId || !preferredDate) return res.status(400).json({ error: 'INVALID_INPUT' });
+  try {
+    res.json(await scheduleBestAvailable(pool, {
+      specializationId,
+      preferredDate,
+      previewOnly: true
+    }));
+  } catch (error) {
+    res.status(error.code === 'NO_AVAILABLE_DOCTOR' ? 409 : 500).json({ error: error.code || 'SERVER_ERROR' });
+  }
+});
 app.post('/api/smart-schedule', authenticate, authorize('patient'), async (req, res) => {
   try {
     if (!req.body.specializationId || !req.body.preferredDate) return res.status(400).json({ error: 'INVALID_INPUT' });

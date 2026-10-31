@@ -1,22 +1,12 @@
-const state = { token: localStorage.getItem('clinicToken'), register: false, registerRole: 'patient', doctors: [], specializations: [], selectedDoctorId: null };
+const state = { token: localStorage.getItem('clinicToken'), register: false, doctors: [], specializations: [], selectedDoctorId: null, selectedSlot: null, pendingBooking: null, availabilityByDoctor: {}, availabilityDate: '', availabilityRequestId: 0 };
 const adminLoginMode = new URLSearchParams(window.location.search).get('role') === 'admin';
 const $ = (id) => document.getElementById(id);
 
 function syncRegisterFields() {
   const isRegister = state.register;
-  const accountType = $('accountType');
-  const doctorFields = document.querySelectorAll('.doctor-only');
   const registerFields = document.querySelectorAll('.register-only');
 
   registerFields.forEach((field) => field.classList.toggle('hidden', !isRegister));
-
-  if (accountType) {
-    accountType.classList.toggle('hidden', !isRegister);
-    accountType.value = accountType.value || 'patient';
-  }
-
-  const isDoctor = isRegister && accountType && accountType.value === 'doctor';
-  doctorFields.forEach((field) => field.classList.toggle('hidden', !isDoctor));
 }
 
 function normalizeDoctorName(name) {
@@ -38,8 +28,18 @@ async function api(path, options = {}) {
   };
 
   const response = await fetch(`/api${path}`, { ...options, headers });
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const error = new Error(response.status === 404 ? 'API_ENDPOINT_NOT_FOUND' : 'API_INVALID_RESPONSE');
+    error.status = response.status;
+    throw error;
+  }
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || data.error || 'Request failed');
+  if (!response.ok) {
+    const error = new Error(data.message || data.error || 'Request failed');
+    error.status = response.status;
+    throw error;
+  }
   return data;
 }
 
@@ -95,6 +95,20 @@ function renderDoctors() {
   list.innerHTML = doctors.length ? doctors.map((doctor) => {
     const initials = (doctor.full_name || 'Dr').split(' ').slice(0, 2).map(part => part[0]).join('').toUpperCase();
     const fullName = normalizeDoctorName(doctor.full_name);
+    const slots = state.availabilityByDoctor[doctor.doctor_id];
+    const availability = !state.availabilityDate
+      ? 'Select a date to view available times.'
+      : slots === undefined
+        ? 'Loading available times…'
+        : slots === null
+          ? 'Unable to load available times.'
+          : slots.length
+            ? slots.map((slot, index) => `
+              <button type="button" class="doctor-time-slot" data-action="book-slot" data-doctor-id="${doctor.doctor_id}" data-slot-index="${index}">
+                ${formatPaymentTime(slot.startTime)} - ${formatPaymentTime(slot.endTime)}
+              </button>
+            `).join('')
+            : 'No available times for this date.';
     return `
       <article class="doctor-card">
         <div class="doctor-top">
@@ -109,8 +123,11 @@ function renderDoctors() {
             <span>₹${Number(doctor.consultation_fee || 0).toFixed(0)} consultation</span>
           </div>
         </div>
+        <div class="doctor-availability">
+          <strong>Available times${state.availabilityDate ? ` · ${formatPaymentDate(state.availabilityDate)}` : ''}</strong>
+          <div class="doctor-time-slots">${availability}</div>
+        </div>
         <div class="card-row">
-          <span class="price">Available today</span>
           <div class="button-group">
             <button type="button" class="button button-secondary small-button" data-action="profile" data-doctor-id="${doctor.doctor_id}">View Profile</button>
             <button type="button" class="button button-primary small-button" data-action="schedule" data-doctor-id="${doctor.doctor_id}">Book</button>
@@ -119,6 +136,62 @@ function renderDoctors() {
       </article>
     `;
   }).join('') : '<p class="message">No doctors match your current filters.</p>';
+}
+
+async function refreshDoctorAvailability() {
+  const date = $('date')?.value;
+  if (!date) return;
+
+  const requestId = ++state.availabilityRequestId;
+  state.availabilityDate = date;
+  state.availabilityByDoctor = {};
+  renderDoctors();
+
+  const results = await Promise.all(state.doctors.map(async (doctor) => {
+    try {
+      const slots = await api(`/availability/${doctor.doctor_id}/${date}`);
+      return [doctor.doctor_id, slots];
+    } catch {
+      return [doctor.doctor_id, null];
+    }
+  }));
+  if (requestId !== state.availabilityRequestId || date !== $('date')?.value) return;
+
+  state.availabilityByDoctor = Object.fromEntries(results);
+  renderDoctors();
+}
+
+async function previewAvailableDoctor(specializationId, preferredDate) {
+  const specialization = state.specializations.find((item) => Number(item.specialization_id) === Number(specializationId));
+  if (!specialization) throw new Error('NO_AVAILABLE_DOCTOR');
+
+  const doctors = state.doctors.filter((doctor) => doctor.specialization === specialization.name);
+  const candidates = await Promise.all(doctors.map(async (doctor) => {
+    const slots = await api(`/availability/${doctor.doctor_id}/${preferredDate}`);
+    return slots.length ? { doctor, slots } : null;
+  }));
+  const available = candidates.filter(Boolean).sort((left, right) =>
+    left.slots[0].startTime.localeCompare(right.slots[0].startTime) ||
+    Number(right.doctor.avg_rating || 0) - Number(left.doctor.avg_rating || 0) ||
+    Number(right.doctor.years_experience || 0) - Number(left.doctor.years_experience || 0)
+  );
+  if (!available.length) throw new Error('NO_AVAILABLE_DOCTOR');
+
+  const { doctor, slots } = available[0];
+  const slot = slots[0];
+  return {
+    doctorId: doctor.doctor_id,
+    availabilityId: slot.availabilityId,
+    availableSlots: slots,
+    appointmentDate: preferredDate,
+    startTime: slot.startTime,
+    endTime: slot.endTime,
+    doctorName: doctor.full_name,
+    specialization: doctor.specialization,
+    yearsExperience: doctor.years_experience,
+    consultationFee: doctor.consultation_fee,
+    score: 'Recommended'
+  };
 }
 
 function fillSpecializationFilters() {
@@ -138,7 +211,7 @@ function setMatchResult(data) {
   empty.classList.add('hidden');
   wrap.classList.remove('hidden');
 
-  $('score').textContent = `${data.score}/100`;
+  $('score').textContent = typeof data.score === 'number' ? `${data.score}/100` : data.score || '--';
   $('doctorName').textContent = normalizeDoctorName(data.doctorName || data.doctor?.full_name || 'Doctor');
   $('matchDetails').textContent = `${data.specialization} • ${data.appointmentDate || 'Selected date'} at ${data.startTime || 'TBD'}`;
   $('doctorExperience').textContent = `${data.yearsExperience || 0} years`;
@@ -255,6 +328,7 @@ async function load() {
     fillSpecializationFilters();
     renderSpecializations();
     renderDoctors();
+    await refreshDoctorAvailability();
   } catch (error) {
     if ($('doctorList')) $('doctorList').innerHTML = '<p class="message">Doctor directory unavailable. Check the server and database.</p>';
     if ($('specializationsGrid')) $('specializationsGrid').innerHTML = '<p class="message">Specialization data unavailable right now.</p>';
@@ -274,39 +348,186 @@ async function scheduleVisit() {
     return;
   }
 
+  const scheduleButton = $('schedule');
+  const bookSelected = $('bookSelected');
+  if (scheduleButton) scheduleButton.disabled = true;
+  if (bookSelected) bookSelected.disabled = true;
+
   try {
-    let data;
+    let preview;
     if (state.selectedDoctorId) {
       const slots = await api(`/availability/${state.selectedDoctorId}/${preferredDate}`);
       if (!slots.length) throw new Error('NO_DOCTOR_SLOT');
-      const slot = slots[0];
-      data = await api('/appointments', {
-        method: 'POST',
-        body: JSON.stringify({ doctorId: state.selectedDoctorId, availabilityId: slot.availabilityId, appointmentDate: preferredDate, startTime: slot.startTime, endTime: slot.endTime })
-      });
+      const slot = state.selectedSlot
+        ? slots.find((availableSlot) =>
+          Number(availableSlot.availabilityId) === Number(state.selectedSlot.availabilityId) &&
+          availableSlot.startTime === state.selectedSlot.startTime
+        )
+        : slots[0];
+      if (!slot) {
+        state.selectedSlot = null;
+        throw new Error('SLOT_TAKEN');
+      }
       const selectedDoctor = state.doctors.find((doctor) => doctor.doctor_id === state.selectedDoctorId);
-      data = { ...data, doctorName: selectedDoctor?.full_name, specialization: selectedDoctor?.specialization, yearsExperience: selectedDoctor?.years_experience, consultationFee: selectedDoctor?.consultation_fee, score: 'Selected' };
+      if (!selectedDoctor) throw new Error('DOCTOR_NOT_FOUND');
+      preview = {
+        doctorId: selectedDoctor.doctor_id,
+        availabilityId: slot.availabilityId,
+        availableSlots: slots,
+        appointmentDate: preferredDate,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        doctorName: selectedDoctor.full_name,
+        specialization: selectedDoctor.specialization,
+        yearsExperience: selectedDoctor.years_experience,
+        consultationFee: selectedDoctor.consultation_fee,
+        score: 'Selected'
+      };
     } else {
-      data = await api('/smart-schedule', {
-        method: 'POST',
-        body: JSON.stringify({ specializationId, preferredDate })
-      });
+      try {
+        preview = await api('/smart-schedule/preview', {
+          method: 'POST',
+          body: JSON.stringify({ specializationId, preferredDate })
+        });
+      } catch (error) {
+        if (error.status !== 404) throw error;
+        preview = await previewAvailableDoctor(specializationId, preferredDate);
+      }
     }
 
-    setMatchResult({
-      score: data.score,
-      doctorName: data.doctorName,
-      specialization: data.specialization,
-      appointmentDate: data.appointmentDate,
-      startTime: data.startTime,
-      yearsExperience: data.yearsExperience || 0,
-      consultationFee: data.consultationFee || 0
+    state.pendingBooking = preview;
+    await openPaymentModal(preview);
+    $('scheduleMessage').textContent = 'Review your appointment details and confirm your booking.';
+    $('scheduleMessage').style.color = '';
+  } catch (error) {
+    $('scheduleMessage').textContent = error.message === 'NO_AVAILABLE_DOCTOR' || error.message === 'NO_DOCTOR_SLOT'
+      ? 'Your selected doctor has no open slot on that date.'
+      : error.message === 'SLOT_TAKEN'
+        ? 'That time was just booked. Select another available time.'
+      : error.message === 'API_ENDPOINT_NOT_FOUND' || error.message === 'API_INVALID_RESPONSE'
+        ? 'The scheduling service could not process this request. Please refresh the page and try again.'
+        : error.message;
+    $('scheduleMessage').style.color = '#dc6548';
+  } finally {
+    if (scheduleButton) scheduleButton.disabled = false;
+    if (bookSelected) bookSelected.disabled = false;
+  }
+}
+
+function formatPaymentDate(dateValue) {
+  const date = new Date(`${dateValue}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? dateValue
+    : date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatPaymentTime(timeValue) {
+  const [hours, minutes] = String(timeValue).split(':').map(Number);
+  if (!Number.isInteger(hours) || !Number.isInteger(minutes)) return timeValue;
+  return `${(hours % 12) || 12}:${String(minutes).padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`;
+}
+
+async function openPaymentModal(appointment) {
+  const modal = $('paymentModal');
+  const fee = Number(appointment.consultationFee);
+  const slots = await api(`/availability/${appointment.doctorId}/${appointment.appointmentDate}`);
+  const availableSlots = slots.map((slot) => ({
+    availabilityId: slot.availabilityId ?? slot.availability_id,
+    startTime: slot.startTime ?? slot.start_time,
+    endTime: slot.endTime ?? slot.end_time
+  })).filter((slot) => slot.availabilityId && slot.startTime && slot.endTime);
+  const timeSelect = $('paymentTimeSelect');
+  timeSelect.innerHTML = availableSlots.length
+    ? availableSlots.map((slot, index) =>
+    `<option value="${index}">${formatPaymentTime(slot.startTime)} - ${formatPaymentTime(slot.endTime)}</option>`
+    ).join('')
+    : '<option value="">No available times for this date</option>';
+  timeSelect.disabled = availableSlots.length === 0;
+  const selectedSlotIndex = Math.max(0, availableSlots.findIndex((slot) =>
+    slot.availabilityId === appointment.availabilityId && slot.startTime === appointment.startTime
+  ));
+  if (availableSlots.length) timeSelect.value = String(selectedSlotIndex);
+  state.pendingBooking = availableSlots.length
+    ? { ...appointment, availableSlots, ...availableSlots[selectedSlotIndex] }
+    : null;
+  $('paymentDoctor').textContent = normalizeDoctorName(appointment.doctorName);
+  $('paymentSpecialization').textContent = appointment.specialization;
+  $('paymentAppointmentTime').textContent = availableSlots.length
+    ? `${formatPaymentDate(appointment.appointmentDate)} · ${formatPaymentTime(state.pendingBooking.startTime)}`
+    : formatPaymentDate(appointment.appointmentDate);
+  $('paymentAmount').textContent = `₹${fee.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+  $('confirmPaymentBooking').textContent = availableSlots.length ? 'Confirm appointment' : 'No times available';
+  $('confirmPaymentBooking').disabled = availableSlots.length === 0;
+  $('paymentMessage').textContent = availableSlots.length
+    ? ''
+    : 'This doctor has no available appointment times on the selected date. Go back and choose another date.';
+  modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  modal.querySelector('.payment-panel').focus();
+}
+
+function updatePaymentAppointmentTime() {
+  const appointment = state.pendingBooking;
+  if (!appointment) return;
+  $('paymentAppointmentTime').textContent = `${formatPaymentDate(appointment.appointmentDate)} · ${formatPaymentTime(appointment.startTime)}`;
+}
+
+function closePaymentModal() {
+  const modal = $('paymentModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  state.pendingBooking = null;
+}
+
+async function confirmPaymentAndBook() {
+  if (!state.pendingBooking) return;
+
+  const button = $('confirmPaymentBooking');
+  const paymentMessage = $('paymentMessage');
+  if (!state.pendingBooking) return;
+  const pendingBooking = state.pendingBooking;
+  button.disabled = true;
+  button.textContent = 'Confirming appointment...';
+  paymentMessage.textContent = '';
+
+  try {
+    const appointment = await api('/appointments', {
+      method: 'POST',
+      body: JSON.stringify({
+        doctorId: pendingBooking.doctorId,
+        availabilityId: pendingBooking.availabilityId,
+        appointmentDate: pendingBooking.appointmentDate,
+        startTime: pendingBooking.startTime,
+        endTime: pendingBooking.endTime
+      })
     });
-    $('scheduleMessage').textContent = state.selectedDoctorId ? 'Appointment confirmed with your selected doctor.' : 'Appointment confirmed.';
+    const confirmedAppointment = { ...pendingBooking, ...appointment };
+    closePaymentModal();
+    setMatchResult({
+      score: confirmedAppointment.score,
+      doctorName: confirmedAppointment.doctorName,
+      specialization: confirmedAppointment.specialization,
+      appointmentDate: confirmedAppointment.appointmentDate,
+      startTime: confirmedAppointment.startTime,
+      yearsExperience: confirmedAppointment.yearsExperience || 0,
+      consultationFee: confirmedAppointment.consultationFee || 0
+    });
+    $('scheduleMessage').textContent = 'Appointment confirmed. The consultation fee is payable at the clinic.';
     $('scheduleMessage').style.color = '#0a4b4d';
   } catch (error) {
-    $('scheduleMessage').textContent = error.message === 'NO_AVAILABLE_DOCTOR' || error.message === 'NO_DOCTOR_SLOT' ? 'Your selected doctor has no open slot on that date.' : error.message;
-    $('scheduleMessage').style.color = '#dc6548';
+    if (error.message === 'SLOT_TAKEN' || error.message === 'ER_DUP_ENTRY' || error.message === 'NO_AVAILABLE_DOCTOR') {
+      closePaymentModal();
+      $('scheduleMessage').textContent = 'That appointment slot is no longer available. Please choose another time.';
+      $('scheduleMessage').style.color = '#dc6548';
+    } else {
+      paymentMessage.textContent = error.message;
+    }
+  } finally {
+    button.disabled = false;
+    button.textContent = state.pendingBooking ? 'Confirm appointment' : 'No times available';
   }
 }
 
@@ -328,8 +549,7 @@ function bindEvents() {
     authForm.onsubmit = async (event) => {
       event.preventDefault();
       try {
-        const isDoctorRegistration = state.register && $('accountType') && $('accountType').value === 'doctor';
-        const path = isDoctorRegistration ? '/auth/register-doctor' : (state.register ? '/auth/register' : '/auth/login');
+        const path = state.register ? '/auth/register' : '/auth/login';
         const body = { email: $('email').value, password: $('password').value };
 
         if (state.register) {
@@ -338,15 +558,6 @@ function bindEvents() {
             dateOfBirth: $('dob').value,
             phone: $('phone').value
           });
-
-          if (isDoctorRegistration) {
-            Object.assign(body, {
-              specializationId: Number($('doctorSpecialization').value),
-              licenseNo: $('licenseNo').value,
-              yearsExperience: Number($('yearsExperience').value || 0),
-              consultationFee: Number($('consultationFee').value || 700)
-            });
-          }
         }
 
         const data = await api(path, { method: 'POST', body: JSON.stringify(body) });
@@ -373,12 +584,41 @@ function bindEvents() {
   if (scheduleButton) scheduleButton.onclick = scheduleVisit;
 
   const specializationSelect = $('specialization');
-  if (specializationSelect) specializationSelect.addEventListener('change', () => { state.selectedDoctorId = null; });
+  if (specializationSelect) specializationSelect.addEventListener('change', () => {
+    state.selectedDoctorId = null;
+    state.selectedSlot = null;
+  });
+
+  const dateInput = $('date');
+  if (dateInput) {
+    dateInput.addEventListener('change', () => {
+      state.selectedSlot = null;
+      refreshDoctorAvailability();
+    });
+  }
 
   const bookSelected = $('bookSelected');
   if (bookSelected) {
     bookSelected.onclick = scheduleVisit;
   }
+
+  const paymentModal = $('paymentModal');
+  if (paymentModal) {
+    paymentModal.addEventListener('click', (event) => {
+      if (event.target.matches('[data-close-payment="true"]')) closePaymentModal();
+    });
+    $('paymentTimeSelect').addEventListener('change', (event) => {
+      const selectedSlot = state.pendingBooking?.availableSlots[Number(event.target.value)];
+      if (!selectedSlot) return;
+      state.pendingBooking = { ...state.pendingBooking, ...selectedSlot };
+      updatePaymentAppointmentTime();
+    });
+  }
+
+  const confirmPaymentBookingButton = $('confirmPaymentBooking');
+  if (confirmPaymentBookingButton) confirmPaymentBookingButton.onclick = confirmPaymentAndBook;
+  const cancelPaymentBookingButton = $('cancelPaymentBooking');
+  if (cancelPaymentBookingButton) cancelPaymentBookingButton.onclick = closePaymentModal;
 
   const menuToggle = $('menuToggle');
   const nav = document.querySelector('.primary-nav');
@@ -395,27 +635,7 @@ function bindEvents() {
       if (title) title.textContent = state.register ? 'Create your account' : 'Welcome back';
       toggleAuth.textContent = state.register ? 'I already have an account' : 'Create an account';
       syncRegisterFields();
-
-      const doctorSpecialization = $('doctorSpecialization');
-      const licenseNo = $('licenseNo');
-      const yearsExperience = $('yearsExperience');
-      const consultationFee = $('consultationFee');
-
-      if (!state.register) {
-        if (doctorSpecialization) doctorSpecialization.value = '';
-        if (licenseNo) licenseNo.value = '';
-        if (yearsExperience) yearsExperience.value = '';
-        if (consultationFee) consultationFee.value = '';
-      }
     };
-  }
-
-  const accountType = $('accountType');
-  if (accountType) {
-    accountType.addEventListener('change', () => {
-      state.registerRole = accountType.value || 'patient';
-      syncRegisterFields();
-    });
   }
 
   const doctorList = $('doctorList');
@@ -429,6 +649,7 @@ function bindEvents() {
       if (target.dataset.action === 'profile') openDoctorModal(doctor);
       if (target.dataset.action === 'schedule') {
         state.selectedDoctorId = doctor.doctor_id;
+        state.selectedSlot = null;
         $('specialization').value = state.specializations.find((s) => s.name === doctor.specialization)?.specialization_id || $('specialization').value;
         setMatchResult({
           score: '92',
@@ -446,6 +667,20 @@ function bindEvents() {
         } else {
           $('scheduleMessage').textContent = `${normalizeDoctorName(doctor.full_name)} selected. Choose a date, then click “Book this doctor”.`;
         }
+      }
+      if (target.dataset.action === 'book-slot') {
+        const doctorSlots = state.availabilityByDoctor[doctorId] || [];
+        const slot = doctorSlots[Number(target.dataset.slotIndex)];
+        if (!slot) return;
+        state.selectedDoctorId = doctor.doctor_id;
+        state.selectedSlot = slot;
+        $('specialization').value = state.specializations.find((s) => s.name === doctor.specialization)?.specialization_id || $('specialization').value;
+        if (!state.token) {
+          $('scheduleMessage').textContent = 'Please sign in first to book this doctor.';
+          document.querySelector('#scheduler')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+        scheduleVisit();
       }
     });
   }

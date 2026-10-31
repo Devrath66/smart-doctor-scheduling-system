@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/styles.css?v=10">
+    <link rel="stylesheet" href="/styles.css?v=16">
   </head>
   <body>
     <header class="site-header">
@@ -326,8 +326,8 @@
           <h3>Contact</h3>
           <ul>
             <li>DK Hospital</li>
-            <li>Phone: Available within the app</li>
-            <li>Email: Available within the app</li>
+            <li>Phone: 9179658202</li>
+            <li>Email: devrath24@gmail.com</li>
           </ul>
         </div>
       </div>
@@ -344,6 +344,64 @@
       </div>
     </div>
 
-    <script src="/app.js?v=10"></script>
+    <div id="paymentModal" class="modal payment-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
+      <div class="modal-backdrop" data-close-payment="true"></div>
+      <section class="payment-panel panel" tabindex="-1">
+        <button type="button" class="modal-close" aria-label="Close payment options" data-close-payment="true">×</button>
+        <p class="eyebrow">Appointment booking</p>
+        <h2 id="paymentTitle">Review and confirm</h2>
+        <p class="payment-intro">Review your appointment details before confirming. The consultation fee is payable at the clinic.</p>
+
+        <div class="payment-summary">
+          <div>
+            <span>Doctor</span>
+            <strong id="paymentDoctor"></strong>
+          </div>
+          <div>
+            <span>Specialization</span>
+            <strong id="paymentSpecialization"></strong>
+          </div>
+          <div>
+            <span>Date and time</span>
+            <strong id="paymentAppointmentTime"></strong>
+          </div>
+          <label class="payment-time-picker" for="paymentTimeSelect">
+            <span>Available appointment times</span>
+            <select id="paymentTimeSelect" aria-label="Available appointment times"></select>
+          </label>
+          <div class="payment-total">
+            <span>Consultation fee</span>
+            <strong id="paymentAmount"></strong>
+          </div>
+        </div>
+
+        <div class="payment-methods">
+          <h3 class="payment-method-heading">Payment method</h3>
+          <div class="payment-method-option selected">
+            <span class="payment-method-icon" aria-hidden="true">₹</span>
+            <span class="payment-method-copy"><strong>Pay at clinic</strong><small>Pay the consultation fee at reception during your visit.</small></span>
+          </div>
+          <button class="payment-method-option payment-method-unavailable" type="button" disabled aria-label="UPI payment coming soon">
+            <span class="payment-method-icon" aria-hidden="true">U</span>
+            <span class="payment-method-copy"><strong>UPI</strong><small>Online payment coming soon</small></span>
+            <span class="payment-method-status">Coming soon</span>
+          </button>
+          <button class="payment-method-option payment-method-unavailable" type="button" disabled aria-label="Card payment coming soon">
+            <span class="payment-method-icon card-icon" aria-hidden="true">▰</span>
+            <span class="payment-method-copy"><strong>Credit or debit card</strong><small>Online payment coming soon</small></span>
+            <span class="payment-method-status">Coming soon</span>
+          </button>
+        </div>
+
+        <p id="paymentMessage" class="payment-message" role="status" aria-live="polite"></p>
+        <div class="payment-actions">
+          <button id="confirmPaymentBooking" class="button button-primary" type="button">Confirm appointment</button>
+          <button id="cancelPaymentBooking" class="button button-secondary" type="button">Back</button>
+        </div>
+        <p class="payment-note">No online payment is collected. Payment is due at the clinic.</p>
+      </section>
+    </div>
+
+    <script src="/app.js?v=16"></script>
   </body>
 </html>

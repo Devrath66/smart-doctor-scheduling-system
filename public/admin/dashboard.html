@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/styles.css?v=12">
+    <link rel="stylesheet" href="/styles.css?v=13">
   </head>
   <body class="admin-body authenticated">
     <header class="site-header admin-header">
@@ -50,6 +50,52 @@
           </div>
           <p>Update doctor profiles and add availability windows for each clinician.</p>
         </div>
+        <div class="admin-add-doctor-action">
+          <button id="toggleAddDoctor" class="button button-primary" type="button" aria-expanded="false" aria-controls="addDoctorForm">
+            Add new doctor
+          </button>
+        </div>
+        <form id="addDoctorForm" class="admin-form admin-add-doctor-form" hidden>
+          <label>
+            <span>Full name</span>
+            <input name="fullName" type="text" maxlength="100" autocomplete="name" required>
+          </label>
+          <label>
+            <span>Email</span>
+            <input name="email" type="email" maxlength="150" autocomplete="email" required>
+          </label>
+          <label>
+            <span>Initial password</span>
+            <input name="password" type="password" autocomplete="new-password" required>
+          </label>
+          <label>
+            <span>Medical license number</span>
+            <input name="licenseNo" type="text" maxlength="50" required>
+          </label>
+          <label>
+            <span>Specialization</span>
+            <select name="specializationId" required>
+              <option value="">Select a specialization</option>
+            </select>
+          </label>
+          <label>
+            <span>Years of experience</span>
+            <input name="yearsExperience" type="number" min="0" step="1" value="0" required>
+          </label>
+          <label>
+            <span>Consultation fee (₹)</span>
+            <input name="consultationFee" type="number" min="0" step="0.01" value="700" required>
+          </label>
+          <label>
+            <span>Daily capacity</span>
+            <input name="dailyCapacity" type="number" min="1" step="1" value="8" required>
+          </label>
+          <div class="admin-add-doctor-actions">
+            <button class="button button-primary" type="submit">Create doctor account</button>
+            <button id="cancelAddDoctor" class="button button-secondary" type="button">Cancel</button>
+          </div>
+          <p id="doctorFormMessage" class="admin-add-doctor-message" role="status" aria-live="polite"></p>
+        </form>
         <div id="roster" class="admin-doctor-grid"></div>
       </section>
 
@@ -106,6 +152,6 @@
       <p id="message" class="message" aria-live="polite"></p>
     </main>
 
-    <script src="/admin/admin.js?v=6"></script>
+    <script src="/admin/admin.js?v=7"></script>
   </body>
 </html>
