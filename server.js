@@ -18,7 +18,17 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 const authLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
-const tokenFor = user => jwt.sign({ userId: user.user_id, role: user.role }, process.env.JWT_SECRET || 'development-secret', { expiresIn: '8h' });
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is not configured');
+}
+
+const tokenFor = user => jwt.sign(
+  { userId: user.user_id, role: user.role },
+  JWT_SECRET,
+  { expiresIn: '8h' }
+);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.post('/api/auth/register', authLimit, async (req, res) => {
